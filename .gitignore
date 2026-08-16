@@ -1,0 +1,7 @@
+.venv/
+venv/
+.env
+.vscode/
+
+# Python bytecode and cache directories
+__pycache__/
