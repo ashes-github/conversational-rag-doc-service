@@ -1,6 +1,6 @@
 """Conversational RAG chain construction and orchestration."""
 
-from langchain_classic.chains import create_history_aware_retriever, create_retrieval_chain
+from langchain_classic.chains import create_history_aware_retriever
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda
@@ -9,6 +9,7 @@ from langchain_groq import ChatGroq
 
 from backend.core.config import Settings
 from backend.services.conversation_service import ConversationService
+from backend.services.guardrail_service import GuardrailService
 from backend.services.retrieval_service import RetrievalService
 
 
@@ -18,6 +19,7 @@ class RagService:
         settings: Settings,
         retrieval_service: RetrievalService,
         conversation_service: ConversationService,
+        guardrail_service: GuardrailService,
     ) -> None:
         llm = ChatGroq(
             groq_api_key=settings.groq_api_key,
@@ -58,7 +60,10 @@ class RagService:
             ]
         )
         answer_chain = create_stuff_documents_chain(llm, answer_prompt)
-        rag_chain = create_retrieval_chain(history_aware_retriever, answer_chain)
+        rag_chain = guardrail_service.build_chain(
+            history_aware_retriever,
+            answer_chain,
+        )
 
         self.chain = RunnableWithMessageHistory(
             rag_chain,

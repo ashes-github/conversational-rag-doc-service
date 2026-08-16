@@ -8,6 +8,7 @@ from backend.api.documents import create_documents_router
 from backend.core.config import Settings
 from backend.core.logging import configure_logging
 from backend.services.conversation_service import ConversationService
+from backend.services.guardrail_service import GuardrailService
 from backend.services.ingestion_service import IngestionService
 from backend.services.rag_service import RagService
 from backend.services.retrieval_service import RetrievalService
@@ -21,7 +22,13 @@ def create_app() -> FastAPI:
     conversation_service = ConversationService()
     retrieval_service = RetrievalService(settings)
     ingestion_service = IngestionService(settings, retrieval_service)
-    rag_service = RagService(settings, retrieval_service, conversation_service)
+    guardrail_service = GuardrailService()
+    rag_service = RagService(
+        settings,
+        retrieval_service,
+        conversation_service,
+        guardrail_service,
+    )
 
     app = FastAPI(
         title="Conversational RAG API",
@@ -38,6 +45,7 @@ def create_app() -> FastAPI:
     app.state.conversation_service = conversation_service
     app.state.retrieval_service = retrieval_service
     app.state.ingestion_service = ingestion_service
+    app.state.guardrail_service = guardrail_service
     app.state.rag_service = rag_service
     return app
 
