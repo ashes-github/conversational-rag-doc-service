@@ -223,6 +223,24 @@ The screenshot below shows an uploaded research paper, an initial document quest
 
 ![Conversational RAG application showing an uploaded PDF and grounded follow-up answers](docs/screenshots/02-grounded-answer.png)
 
+### Document upload and indexing
+
+The indexing confirmation reports the uploaded document and the number of chunks added to the session-scoped vector store.
+
+![Streamlit sidebar showing a PDF successfully indexed into 53 chunks](docs/screenshots/01-upload-and-index.png)
+
+### No-context guardrail
+
+When retrieval does not return relevant document context, the backend skips answer generation and returns the fixed no-context response.
+
+![Conversational RAG application showing deterministic no-context guardrail responses](docs/screenshots/03-no-context-guardrail.png)
+
+### Backend API documentation
+
+FastAPI and LangServe expose interactive OpenAPI documentation for the backend and chain endpoints.
+
+![FastAPI documentation showing the Conversational RAG and LangServe chain endpoints](docs/screenshots/04-api-docs.png)
+
 ## Repository structure
 
 ```text
