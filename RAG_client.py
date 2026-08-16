@@ -91,7 +91,7 @@ with st.sidebar:
                 )
                 for document in upload_result["documents"]:
                     st.caption(
-                        f":material/check_circle: {document['filename']} · "
+                        f":material/check_circle: {document['filename']} | "
                         f"{document['chunks']} chunks"
                     )
             except (requests.RequestException, RuntimeError) as exc:
