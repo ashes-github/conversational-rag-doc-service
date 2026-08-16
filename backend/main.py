@@ -10,6 +10,7 @@ from backend.core.logging import configure_logging
 from backend.services.conversation_service import ConversationService
 from backend.services.guardrail_service import GuardrailService
 from backend.services.ingestion_service import IngestionService
+from backend.services.observability_service import ObservabilityService
 from backend.services.rag_service import RagService
 from backend.services.retrieval_service import RetrievalService
 
@@ -19,8 +20,9 @@ def create_app() -> FastAPI:
     settings = Settings.from_environment()
     settings.configure_environment()
 
+    observability_service = ObservabilityService()
     conversation_service = ConversationService()
-    retrieval_service = RetrievalService(settings)
+    retrieval_service = RetrievalService(settings, observability_service)
     ingestion_service = IngestionService(settings, retrieval_service)
     guardrail_service = GuardrailService()
     rag_service = RagService(
@@ -28,6 +30,7 @@ def create_app() -> FastAPI:
         retrieval_service,
         conversation_service,
         guardrail_service,
+        observability_service,
     )
 
     app = FastAPI(
@@ -35,6 +38,7 @@ def create_app() -> FastAPI:
         version="1.2.0",
         description="Conversational question answering over session-scoped PDF uploads",
     )
+    app.middleware("http")(observability_service.middleware)
     app.include_router(
         create_documents_router(settings, ingestion_service, retrieval_service)
     )
@@ -42,6 +46,7 @@ def create_app() -> FastAPI:
     add_routes(app, rag_service.chain, path="/chain")
 
     app.state.settings = settings
+    app.state.observability_service = observability_service
     app.state.conversation_service = conversation_service
     app.state.retrieval_service = retrieval_service
     app.state.ingestion_service = ingestion_service

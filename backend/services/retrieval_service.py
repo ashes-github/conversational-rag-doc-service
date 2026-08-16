@@ -3,6 +3,7 @@
 import hashlib
 from collections.abc import Callable, Sequence
 from threading import RLock
+from time import perf_counter
 from typing import Protocol
 
 from langchain_chroma import Chroma
@@ -12,6 +13,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 
 from backend.core.config import Settings
 from backend.models.responses import IndexedDocument
+from backend.services.observability_service import ObservabilityService
 
 
 class Reranker(Protocol):
@@ -37,6 +39,7 @@ class RetrievalService:
     def __init__(
         self,
         settings: Settings,
+        observability_service: ObservabilityService,
         reranker_factory: Callable[[str], Reranker] | None = None,
     ) -> None:
         self._top_k = settings.retrieval_top_k
@@ -48,6 +51,7 @@ class RetrievalService:
         self._reranker_batch_size = settings.reranker_batch_size
         self._reranker_factory = reranker_factory or _create_cross_encoder
         self._reranker: Reranker | None = None
+        self._observability = observability_service
         self._embeddings = HuggingFaceEmbeddings(
             model_name=settings.embedding_model
         )
@@ -131,7 +135,7 @@ class RetrievalService:
             self._documents.setdefault(session_id, []).append(indexed)
             return indexed
 
-    def retrieve(self, query: str, config: RunnableConfig) -> list[Document]:
+    def _retrieve(self, query: str, config: RunnableConfig) -> list[Document]:
         session_id = str(config.get("configurable", {}).get("session_id", "")).strip()
         if not session_id:
             return []
@@ -163,6 +167,21 @@ class RetrievalService:
             if len(results) == self._top_k:
                 break
         return results
+
+    def retrieve(self, query: str, config: RunnableConfig) -> list[Document]:
+        started = perf_counter()
+        results: list[Document] = []
+        try:
+            results = self._retrieve(query, config)
+            return results
+        except Exception as exc:
+            self._observability.record_error(exc)
+            raise
+        finally:
+            self._observability.record_retrieval(
+                latency_ms=(perf_counter() - started) * 1000,
+                document_count=len(results),
+            )
 
     def list_documents(self, session_id: str) -> list[IndexedDocument]:
         with self._lock:

@@ -10,6 +10,7 @@ from langchain_groq import ChatGroq
 from backend.core.config import Settings
 from backend.services.conversation_service import ConversationService
 from backend.services.guardrail_service import GuardrailService
+from backend.services.observability_service import ObservabilityService
 from backend.services.retrieval_service import RetrievalService
 
 
@@ -20,11 +21,13 @@ class RagService:
         retrieval_service: RetrievalService,
         conversation_service: ConversationService,
         guardrail_service: GuardrailService,
+        observability_service: ObservabilityService,
     ) -> None:
         llm = ChatGroq(
             groq_api_key=settings.groq_api_key,
             model_name=settings.llm_model,
         )
+        measured_llm = observability_service.wrap_llm(llm)
         session_retriever = RunnableLambda(retrieval_service.retrieve)
 
         contextualize_prompt = ChatPromptTemplate.from_messages(
@@ -41,7 +44,7 @@ class RagService:
             ]
         )
         history_aware_retriever = create_history_aware_retriever(
-            llm,
+            measured_llm,
             session_retriever,
             contextualize_prompt,
         )
@@ -59,7 +62,7 @@ class RagService:
                 ("human", "{input}"),
             ]
         )
-        answer_chain = create_stuff_documents_chain(llm, answer_prompt)
+        answer_chain = create_stuff_documents_chain(measured_llm, answer_prompt)
         rag_chain = guardrail_service.build_chain(
             history_aware_retriever,
             answer_chain,
