@@ -39,6 +39,12 @@ def create_app() -> FastAPI:
         description="Conversational question answering over session-scoped PDF uploads",
     )
     app.middleware("http")(observability_service.middleware)
+
+    @app.get("/health", tags=["health"])
+    async def health() -> dict[str, str]:
+        """Return a lightweight readiness response for container health checks."""
+        return {"status": "ok"}
+
     app.include_router(
         create_documents_router(settings, ingestion_service, retrieval_service)
     )

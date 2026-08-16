@@ -1,0 +1,18 @@
+.git
+.gitignore
+.vscode
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Never copy runtime secrets into an image.
+.env
+.env.*
+!.env.example
+
+# Uploaded/test documents are runtime data, not image content.
+*.pdf

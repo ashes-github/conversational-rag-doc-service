@@ -1,5 +1,3 @@
-# Supported runtime: Python 3.10-3.13
-
 # Backend API and LangServe
 fastapi>=0.115,<1.0
 uvicorn[standard]>=0.30,<1.0
@@ -16,16 +14,9 @@ langchain-groq>=1.0,<2.0
 langchain-huggingface[full]>=1.0,<2.0
 sentence-transformers>=5.2,<6.0
 
-# Local Hugging Face embedding runtime (validated with the CPU build)
+# Local text embedding and reranking runtime
 torch==2.13.0
-# torchvision is intentionally omitted: this app performs text-only inference.
 
-# PDF loading (used by PyPDFLoader)
+# PDF loading and environment configuration
 pypdf>=5.0,<7.0
-
-# Streamlit client and HTTP requests
-streamlit>=1.61,<2.0
-requests>=2.32,<3.0
-
-# Environment configuration
 python-dotenv>=1.0,<2.0

@@ -25,13 +25,13 @@ class Settings:
     groq_api_key: str | None
     hf_token: str | None
     embedding_model: str = "all-MiniLM-L6-v2"
-    llm_model: str = "llama-3.1-8b-instant"
+    llm_model: str = "openai/gpt-oss-20b"
     chunk_size: int = 1000
     chunk_overlap: int = 150
     retrieval_top_k: int = 4
     retrieval_candidate_k: int = 8
     retrieval_score_threshold: float = 0.20
-    reranking_enabled: bool = False
+    reranking_enabled: bool = True
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
     reranker_score_threshold: float = 0.10
     reranker_batch_size: int = 8
@@ -60,7 +60,7 @@ class Settings:
             groq_api_key=os.getenv("GROQ_API_KEY"),
             hf_token=os.getenv("HF_TOKEN"),
             embedding_model=os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
-            llm_model=os.getenv("LLM_MODEL", "llama-3.1-8b-instant"),
+            llm_model=os.getenv("LLM_MODEL", "openai/gpt-oss-20b"),
             chunk_size=int(os.getenv("CHUNK_SIZE", "1000")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "150")),
             retrieval_top_k=int(os.getenv("RETRIEVAL_TOP_K", "4")),
@@ -68,7 +68,7 @@ class Settings:
             retrieval_score_threshold=float(
                 os.getenv("RETRIEVAL_SCORE_THRESHOLD", "0.20")
             ),
-            reranking_enabled=_environment_bool("RERANKING_ENABLED", False),
+            reranking_enabled=_environment_bool("RERANKING_ENABLED", True),
             reranker_model=os.getenv(
                 "RERANKER_MODEL",
                 "cross-encoder/ms-marco-MiniLM-L6-v2",
