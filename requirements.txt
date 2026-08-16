@@ -15,6 +15,10 @@ langchain-chroma>=1.1,<2.0
 langchain-groq>=1.0,<2.0
 langchain-huggingface[full]>=1.0,<2.0
 
+# Local Hugging Face embedding runtime (validated with the CPU build)
+torch==2.13.0
+# torchvision is intentionally omitted: this app performs text-only inference.
+
 # PDF loading (used by PyPDFLoader)
 pypdf>=5.0,<7.0
 
