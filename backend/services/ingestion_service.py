@@ -1,5 +1,6 @@
 """PDF parsing, metadata enrichment, and chunking."""
 
+import hashlib
 import tempfile
 from pathlib import Path
 
@@ -30,6 +31,7 @@ class IngestionService:
         content: bytes,
     ) -> IndexedDocument:
         safe_filename = Path(filename).name
+        document_id = hashlib.sha256(content).hexdigest()[:16]
         with tempfile.TemporaryDirectory(prefix="rag-upload-") as temp_dir:
             pdf_path = Path(temp_dir) / safe_filename
             pdf_path.write_bytes(content)
@@ -38,10 +40,16 @@ class IngestionService:
         for document in documents:
             document.metadata["filename"] = safe_filename
             document.metadata["source"] = safe_filename
+            document.metadata["document_id"] = document_id
+            if "page" in document.metadata:
+                document.metadata["page_number"] = int(document.metadata["page"]) + 1
 
         chunks = self._text_splitter.split_documents(documents)
         if not chunks:
             raise ValueError("No extractable text was found in the PDF")
+
+        for chunk_index, chunk in enumerate(chunks):
+            chunk.metadata["chunk_index"] = chunk_index
 
         return self._retrieval_service.add_documents(
             session_id=session_id,
