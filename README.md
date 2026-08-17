@@ -104,17 +104,17 @@ The backend separates API routing, configuration, ingestion, retrieval, conversa
 
 ## RAG and LLM approach
 
-| Area | Final choice | Why |
-|---|---|---|
-| LLM | `openai/gpt-oss-20b` through Groq | Low-latency hosted inference and a simple OpenAI-style chat abstraction. The model is configurable rather than coupled to the chain. |
-| Embeddings | `all-MiniLM-L6-v2` through Hugging Face | Small enough for local CPU use, fast for a demo, and avoids paying for embedding API calls. |
-| Vector store | Chroma, in memory and isolated by session | Minimal operational setup and a good fit for a single-process prototype. |
-| Chunking | Recursive character splitting, 1,000 characters with 150 overlap | A simple content-agnostic baseline that preserves some boundary context. Both values are configurable. |
-| Retrieval | Eight vector candidates, then top four after cross-encoder reranking | Bi-encoder retrieval is fast; a cross-encoder gives a more precise second-stage relevance signal. |
-| Reranker | `cross-encoder/ms-marco-MiniLM-L6-v2` | A relatively small local relevance model that improves ordering without another hosted dependency. |
-| Orchestration | LangChain and LangServe | Provides composable runnables, history-aware retrieval, message history, and an API contract with limited glue code. |
-| Conversation context | Rewrite follow-up questions into standalone queries; retain per-session chat messages | Retrieval should search for the resolved meaning of a follow-up, while the answer prompt still sees recent conversation state. |
-| Grounding | Retrieve first; skip answer generation when no context survives retrieval/reranking | The failure path is deterministic and avoids spending an LLM call on unsupported questions. |
+| Area                 | Final choice                                                                          | Why                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| LLM                  | `openai/gpt-oss-20b` through Groq                                                     | Low-latency hosted inference and a simple OpenAI-style chat abstraction. The model is configurable rather than coupled to the chain. |
+| Embeddings           | `all-MiniLM-L6-v2` through Hugging Face                                               | Small enough for local CPU use, fast for a demo, and avoids paying for embedding API calls.                                          |
+| Vector store         | Chroma, in memory and isolated by session                                             | Minimal operational setup and a good fit for a single-process prototype.                                                             |
+| Chunking             | Recursive character splitting, 1,000 characters with 150 overlap                      | A simple content-agnostic baseline that preserves some boundary context. Both values are configurable.                               |
+| Retrieval            | Eight vector candidates, then top four after cross-encoder reranking                  | Bi-encoder retrieval is fast; a cross-encoder gives a more precise second-stage relevance signal.                                    |
+| Reranker             | `cross-encoder/ms-marco-MiniLM-L6-v2`                                                 | A relatively small local relevance model that improves ordering without another hosted dependency.                                   |
+| Orchestration        | LangChain and LangServe                                                               | Provides composable runnables, history-aware retrieval, message history, and an API contract with limited glue code.                 |
+| Conversation context | Rewrite follow-up questions into standalone queries; retain per-session chat messages | Retrieval should search for the resolved meaning of a follow-up, while the answer prompt still sees recent conversation state.       |
+| Grounding            | Retrieve first; skip answer generation when no context survives retrieval/reranking   | The failure path is deterministic and avoids spending an LLM call on unsupported questions.                                          |
 
 The answer prompt instructs the model to use only retrieved context, admit when the answer is absent, and respond in at most three concise sentences. Retrieved chunks are currently combined with a standard “stuff” chain because the selected top-k is small. For much larger contexts I would add token-budgeted context selection or compression.
 
@@ -189,9 +189,7 @@ Example mappings are documented in [Architecture and engineering decisions](docs
 
 ## AI-assisted development
 
-AI coding assistance was used as a pair-programming tool to review the initial two-file prototype, propose milestone-sized refactors, generate candidate code changes, and help check dependency and container configuration. I kept the changes incremental and ran local syntax/configuration checks after edits.
-
-I treated generated suggestions as drafts rather than requirements. Decisions such as retaining a simple UI, postponing citations, using deterministic no-context behavior, separating backend responsibilities, and documenting in-memory limitations were made by comparing the assignment scope with the cost and explainability of each feature. Before submitting, I would personally verify every command, diagram, trade-off, and claim in this document because I need to be able to defend those decisions in a technical discussion.
+AI coding assistance was used as a pair-programming tool to review the initial two-file prototype, propose milestone-sized refactors, and help check dependency and container configuration. I kept the changes incremental and ran local syntax/configuration checks after edits.
 
 ## What I would do with more time
 
@@ -266,14 +264,14 @@ FastAPI and LangServe expose interactive OpenAPI documentation for the backend a
 
 ## API summary
 
-| Endpoint | Purpose |
-|---|---|
-| `POST /upload` | Upload and index one or more PDFs for a session |
+| Endpoint                      | Purpose                                                     |
+| ----------------------------- | ----------------------------------------------------------- |
+| `POST /upload`                | Upload and index one or more PDFs for a session             |
 | `GET /documents/{session_id}` | List documents indexed in the current process for a session |
-| `POST /chain/invoke` | Invoke the conversational RAG chain through LangServe |
-| `GET /history/{session_id}` | Return chat messages for a session |
-| `GET /health` | Container/readiness health response |
-| `GET /docs` | Interactive OpenAPI documentation |
+| `POST /chain/invoke`          | Invoke the conversational RAG chain through LangServe       |
+| `GET /history/{session_id}`   | Return chat messages for a session                          |
+| `GET /health`                 | Container/readiness health response                         |
+| `GET /docs`                   | Interactive OpenAPI documentation                           |
 
 ## Current limitations
 
